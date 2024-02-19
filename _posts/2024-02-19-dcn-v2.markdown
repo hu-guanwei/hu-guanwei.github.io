@@ -1,0 +1,51 @@
+---
+layout: post
+title:  "On DCN V2"
+date:   2024-02-19
+katex: true
+---
+
+### Cross Layer
+
+The subscript denotes layer number,
+
+$$\boldsymbol{x}_{l+1} = \boldsymbol{x}_0 \odot (\mathbf{W}_l \boldsymbol{x}_l + b_l) + \boldsymbol{x}_l$$
+
+To understand what the cross layer does, let's do a few calculation first. The subscripts below denotes elements position in a vector or matrix; $\odot$ means element-wise product,
+
+$$[\mathbf{W} \boldsymbol{x}]_{i} = \Sigma_{j} \mathbf{W}_{ij} \boldsymbol{x}_j$$
+
+$$[\boldsymbol{x} \odot \boldsymbol{z}]_{i} = x_i z_i$$
+
+$$[\boldsymbol{x} \odot \mathbf{W} \boldsymbol{z}]_{i} = \boldsymbol{x}_i  [\mathbf{W} z]_i = \boldsymbol{x}_i  \Sigma_{j} \mathbf{W}_{ij} \boldsymbol{z}_j$$
+
+For example, let $i=0$,  sum $j$ from $0$ to $2$, and suppose the linear transformation of $z$ is $\mathbf{W}\boldsymbol{z} = \alpha z_0 + \beta z_1 + \gamma z_2$ then we have cross term of
+
+$x_0 (\alpha z_0 + \beta z_1 + \gamma z_2) = \alpha x_0 z_0 + \beta x_0 z_1+ \gamma x_0 z_2$
+
+Notice that the quadratic form $\boldsymbol{x}^T\mathbf{W} \boldsymbol{z}$ gives a scalar result; in here, by replacing the first inner product with element-wise product,  the output of $\boldsymbol{x}\odot \mathbf{W} \boldsymbol{z}$ remains a vector. 
+
+```python
+class CrossNet(nn.Module):
+
+    def __init__(self, in_features: int, layer_num: int = 2):
+        super(CrossNet, self).__init__()
+        self.layer_num = layer_num
+
+        self.Ws = nn.Parameter(torch.Tensor(self.layer_num, in_features, in_features))
+        self.bs = nn.Parameter(torch.Tensor(self.layer_num, in_features))
+
+        self.reset_parameters()
+
+    def reset_parameters(self):
+        nn.init.xavier_normal_(self.Ws)
+        nn.init.zeros_(self.bs)
+
+    def forward(self, x0):
+        xl = x0
+        for l in range(self.layer_num):
+            W = self.Ws[l]
+            b = self.bs[l]
+            xl = x0 * torch.einsum('ij,bi->bj', W, xl) + b + xl
+        return xl
+```

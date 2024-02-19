@@ -5,15 +5,15 @@ date:   2024-02-18 20:53:00 +0800
 katex: true
 ---
 
-To model interactions of high-cardinality categorical features (often called as fields), the factorized machine formula can be expressed as 
+To model interactions of high-cardinality categorical features (often called as fields), the factorization machine formula can be expressed as 
 
 $y = w_0 + \sum_{i=1}^F \mathbf{W_i} \boldsymbol{x_i} + \sum_{i=1}^F\sum_{j<i}\boldsymbol{x_i}\mathbf{V_i}^T\mathbf{V_j}\ \boldsymbol{x_j}$
 
-where $x_i$ and $x_j$ are one-hot vectors, $\mathbf{W}_i$ is of shape $(\text{vocab}_i \times 1)$, $\mathbf{V}_i$ is of shape $(\text{vocab}_i \times K)$, $K$ is the size of the embedding space, $F$ is the total number of fields.
+where $\boldsymbol{x_i}$ and $\boldsymbol{x_j}$ are one-hot vectors, $\mathbf{W}_i$ is of shape $(\text{vocab}_i \times 1)$, $\mathbf{V}_i$ is of shape $(\text{vocab}_i \times K)$, $K$ is the size of the embedding space, $F$ is the total number of fields.
 
 $\mathbf{W_i}$ and $\mathbf{V_i}$ can be thought as look up tables, and to make it even simpler using parameter sharing among fields, 
 
-$y = w_0 + \sum_{i=1}^F \mathbf{W} x_i + \sum_{i=1}^F \sum_{j < i} \boldsymbol{x_i} \mathbf{V}^T\mathbf{V} \boldsymbol{x_j}$
+$y = w_0 + \sum_{i=1}^F \mathbf{W} \boldsymbol{x_i} + \sum_{i=1}^F \sum_{j < i} \boldsymbol{x_i} \mathbf{V}^T\mathbf{V} \boldsymbol{x_j}$
 
 The feature cross term can be express as $\sum_{i=1}^F\sum_{j<i}(\mathbf{V} \boldsymbol{x_i})^T(\mathbf{V} \boldsymbol{x_j})$.
 
@@ -27,6 +27,7 @@ $\dfrac{1}{2}\sum_{k=1}^K [(\sum_{i=1}^F v_{ik})^2 - \sum_{i=1}^F v_{ik}^2]$
 
 So here we have two kinds of summation: $\sum_{k=1}^K$ is summation over embedding axes and $\sum_{i=1}^F$ is summation over fields.
 
+Notice that, in popular implementations, the different fileds are often embedded in the sampe embedding space (parameter sharing or wegiht sharing). 
 ```python
 import torch
 import torch.nn as nn
